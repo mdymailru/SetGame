@@ -26,11 +26,12 @@ class Game {
   var selectedCards = [Int]()  //max 3
   var fieldCards = [Card]()      //max 24
   
+  
   func chooseCard(at index: Int) {
     guard fieldCards.indices.contains(index),        //card no in game field
           !fieldCards[index].isSet else { return }   //card in Set
     
-    var card = fieldCards[index]
+    //var card = fieldCards[index]
     
     if fieldCards[index].isSelected {
       selectedCards.remove(at: selectedCards.firstIndex(of: index)!)
@@ -43,7 +44,7 @@ class Game {
     
     if selectedCards.count == 3 {
       
-      if isSet() {
+      if isSet(selectedCards) {
         fieldCards[index].isSet = true
         selectedCards.forEach { fieldCards[$0].isSet = true }
         print("set: \(selectedCards)")
@@ -62,7 +63,7 @@ class Game {
     for _ in 1...count {
       let newCardFromDeal = cards.remove(at: cards.indices.randomElement()!)
       
-      if let emptyCardPlace = fieldCards.filter{$0.isSet}.first {
+      if let emptyCardPlace = fieldCards.filter({$0.isSet}).first {
         fieldCards[fieldCards.firstIndex(of: emptyCardPlace)!] = newCardFromDeal
       } else {
          fieldCards.append(newCardFromDeal)
@@ -72,11 +73,11 @@ class Game {
   }
   
   
-  func isSet() -> Bool {
+  func isSet(_ indexForSearchCards: [Int]) -> Bool {
     var set: Set<String> = []
     
     for tag in Tags.allCases {
-      selectedCards.forEach { set.insert(fieldCards[$0].tag[tag]!) }
+      indexForSearchCards.forEach { set.insert(fieldCards[$0].tag[tag]!) }
       guard set.count != 2 else { return false }
       set.removeAll()
       
@@ -84,8 +85,44 @@ class Game {
     return true
   }
   
+ //findSet
   
-  
+  func findSet() -> [Int]! {
+    
+    let indexInGameCards = fieldCards.indices.filter { !fieldCards[$0].isSet }
+    
+    let m = 3
+    let n = indexInGameCards.count
+    var a = [Int]()
+    var indexOfSearchSetCards = [Int]()
+    var exit = false
+    
+    func gen(_ num: Int, _ last: Int) {
+        if num == m {
+            for i in 0..<m {
+              indexOfSearchSetCards.append(indexInGameCards[(a[i] - 1)])
+            }
+          if isSet(indexOfSearchSetCards) {
+            indexOfSearchSetCards.forEach { print("\($0) \(fieldCards[$0])") }
+            exit = true
+            return
+          } else {
+            indexOfSearchSetCards.removeAll()
+          }
+          print(a[0..<m])
+          
+        }
+        for i in (last + 1)..<(n + 1) {
+            guard !exit else {return}
+            a.append(i)
+            gen(num + 1, i)
+            a.removeLast(1)
+        }
+    }
+    
+    gen(0, 0)
+    return exit ? indexOfSearchSetCards : nil
+  }
   
   
   init() {

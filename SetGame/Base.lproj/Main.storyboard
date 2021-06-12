@@ -340,12 +340,21 @@
                                     <action selector="touchDealButton:" destination="BYZ-38-t0r" eventType="touchUpInside" id="wrk-LM-Uka"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="qdw-Uk-fcs">
+                                <rect key="frame" x="10" y="606" width="32" height="30"/>
+                                <state key="normal" title="Help"/>
+                                <connections>
+                                    <action selector="touchHelp:" destination="BYZ-38-t0r" eventType="touchUpInside" id="7dp-ZX-RJP"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
+                            <constraint firstItem="qdw-Uk-fcs" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="Gxc-jb-cpQ"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="X2a-kK-ZMS" secondAttribute="trailing" constant="5" id="L2u-EA-VfE"/>
                             <constraint firstItem="X2a-kK-ZMS" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="44" id="P30-Ti-zIS"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="qdw-Uk-fcs" secondAttribute="bottom" constant="100" id="UE5-bf-8AY"/>
                             <constraint firstItem="Hc3-Pc-En5" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="hx2-rk-zjX"/>
                             <constraint firstItem="Hc3-Pc-En5" firstAttribute="top" secondItem="X2a-kK-ZMS" secondAttribute="bottom" constant="70" id="ujy-DB-zV9"/>
                             <constraint firstItem="X2a-kK-ZMS" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="5" id="xq8-cy-rVd"/>
@@ -353,6 +362,7 @@
                     </view>
                     <connections>
                         <outlet property="dealButton" destination="Hc3-Pc-En5" id="Gof-Iw-bzi"/>
+                        <outlet property="helpButton" destination="qdw-Uk-fcs" id="6BG-0b-5fg"/>
                         <outletCollection property="buttonCards" destination="t1O-Vh-HVc" collectionClass="NSMutableArray" id="Kci-Y3-UMb"/>
                         <outletCollection property="buttonCards" destination="sQV-1X-xut" collectionClass="NSMutableArray" id="KQQ-xf-hEJ"/>
                         <outletCollection property="buttonCards" destination="e0N-lL-QIE" collectionClass="NSMutableArray" id="09I-Ge-wel"/>

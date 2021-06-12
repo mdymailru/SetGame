@@ -18,10 +18,19 @@ class ViewController: UIViewController {
     didSet { dealButton.setTitle("Еще 3...\(countOfCards!)", for: .normal) }
   }
   
+  var indexOfSetHelp : [Int]? {
+    didSet { if let indices = indexOfSetHelp {
+                helpButton.setTitle("\(indices[0...2])" , for: .normal)
+           } else {
+            helpButton.setTitle("No Set" , for: .normal)
+           }
+    }
+  }
   
   
   @IBOutlet var buttonCards: [UIButton]!
   
+  @IBOutlet weak var helpButton: UIButton!
   @IBOutlet weak var dealButton: UIButton!
   
   @IBAction func touchButtonCard(_ sender: UIButton) {
@@ -45,6 +54,10 @@ class ViewController: UIViewController {
     //isPlaceForCard = buttonCards.count > game.fieldCards.filter({!$0.isSet}).count
   }
   
+  @IBAction func touchHelp(_ sender: UIButton) {
+    indexOfSetHelp = game.findSet()
+    
+  }
   
   
   func updateViewFromModel() {
