@@ -8,51 +8,65 @@
 import Foundation
 
 
-struct Card {
+struct Card: Equatable {
   
   var isSelected = false
   var tag = [Tags: String]()
   var isSet = false
+  
+  static func == (lhs: Card, rhs: Card) -> Bool {
+    return lhs.tag == rhs.tag
+  }
   
 }
 
 class Game {
   
   var cards = [Card]()           //max 81
-  var selectedCards = [Card]()   //max 3
+  var selectedCards = [Int]()  //max 3
   var fieldCards = [Card]()      //max 24
   
   func chooseCard(at index: Int) {
     guard fieldCards.indices.contains(index),        //card no in game field
           !fieldCards[index].isSet else { return }   //card in Set
     
-    let card = fieldCards[index]
+    var card = fieldCards[index]
     
     if fieldCards[index].isSelected {
+      selectedCards.remove(at: selectedCards.firstIndex(of: index)!)
       fieldCards[index].isSelected = false
       
     } else {
       fieldCards[index].isSelected = true
-      selectedCards.append(card)
+      selectedCards.append(index)
     }
     
     if selectedCards.count == 3 {
       
       if isSet() {
         fieldCards[index].isSet = true
-        print("set")
-        
+        selectedCards.forEach { fieldCards[$0].isSet = true }
+        print("set: \(selectedCards)")
+      } else {
+        print("no set: \(selectedCards)")
       }
+      selectedCards.forEach { fieldCards[$0].isSelected = false }
       selectedCards.removeAll()
-      
     }
   }
   
   func dealCards(count: Int) -> Int {
      
     guard cards.count >= count else { return cards.count }
+    
     for _ in 1...count {
-      fieldCards.append(cards.remove(at: cards.indices.randomElement()!))
+      let newCardFromDeal = cards.remove(at: cards.indices.randomElement()!)
+      
+      if let emptyCardPlace = fieldCards.filter{$0.isSet}.first {
+        fieldCards[fieldCards.firstIndex(of: emptyCardPlace)!] = newCardFromDeal
+      } else {
+         fieldCards.append(newCardFromDeal)
+      }
     }
     return cards.count
   }
@@ -62,7 +76,7 @@ class Game {
     var set: Set<String> = []
     
     for tag in Tags.allCases {
-      selectedCards.forEach { set.insert($0.tag[tag]!) }
+      selectedCards.forEach { set.insert(fieldCards[$0].tag[tag]!) }
       guard set.count != 2 else { return false }
       set.removeAll()
       
