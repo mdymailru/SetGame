@@ -14,10 +14,6 @@ class ViewController: UIViewController {
     didSet { dealButton.isEnabled = isPlaceForCard }
   }
   
-  var countOfCards: Int! {
-    didSet { dealButton.setTitle("Еще 3...\(countOfCards!)", for: .normal) }
-  }
-  
   var indexOfSetHelp : [Int]? {
     didSet { if let indices = indexOfSetHelp {
                 helpButton.setTitle("\(indices[0...2])" , for: .normal)
@@ -29,6 +25,7 @@ class ViewController: UIViewController {
   
   
   @IBOutlet var buttonCards: [UIButton]!
+  @IBOutlet weak var infoLabel: UILabel!
   
   @IBOutlet weak var helpButton: UIButton!
   @IBOutlet weak var dealButton: UIButton!
@@ -36,65 +33,75 @@ class ViewController: UIViewController {
   @IBAction func touchButtonCard(_ sender: UIButton) {
     guard let index = buttonCards.firstIndex(of: sender),
           game.fieldCards.indices.contains(index) else { return }
-    
-    
-    print("\(index) \(game.fieldCards[index].tag[.color]!) \(game.fieldCards[index].tag[.shape]!) \(game.fieldCards[index].tag[.count]!) \(game.fieldCards[index].tag[.fill]!)")
-    
+    game.console(index)
     game.chooseCard(at: index)
     updateViewFromModel()
   }
   
   @IBAction func touchDealButton(_ sender: UIButton) {
     
-    if isPlaceForCard {
-      countOfCards = game.dealCards(count: 3)
+    if isPlaceForCard, game.dealCards() {
       updateViewFromModel()
-    } else { print("no place") }
+    }
     
     //isPlaceForCard = buttonCards.count > game.fieldCards.filter({!$0.isSet}).count
   }
   
   @IBAction func touchHelp(_ sender: UIButton) {
     indexOfSetHelp = game.findSet()
+    updateViewFromModel()
     
   }
   
   
   func updateViewFromModel() {
+    
+    setInfo()
+    
     for index in buttonCards.indices {
       let button = buttonCards[index]
-      button.backgroundColor = .black
-     
       
-      if game.fieldCards.indices.contains(index) {
+      if game.fieldCards.indices.contains(index) { //card button is use card
         let card = game.fieldCards[index]
         
-        button.backgroundColor = .white
+        button.backgroundColor = App.inFieldCardBackColor
         button.layer.cornerRadius = 8
-        
         
         if card.isSelected {
           button.layer.borderWidth = 3.0
           button.layer.borderColor = UIColor.red.cgColor
         } else {
-          button.layer.borderWidth = 0.0
+          if card.isHelp {
+            button.layer.borderWidth = 3.0
+            button.layer.borderColor = UIColor.yellow.cgColor
+          } else {
+            button.layer.borderWidth = 0.0
+          }
         }
-        
-        if card.isSet {
-          button.backgroundColor = #colorLiteral(red: 0.7540688515, green: 0.7540867925, blue: 0.7540771365, alpha: 1)
+      
+        if card.isSet { //card button in Set
+          button.backgroundColor = App.inSetCardBackColor
         }
         
         button.setAttributedTitle(getCardTitle(card: card), for: .normal)
       
-      } else {
+      } else {                                         //no use card button
         button.setTitle(nil, for: .normal)
         button.setAttributedTitle(nil, for: .normal)
+        button.backgroundColor = App.noUseCardBackColor
       }
      
     }
     
-    isPlaceForCard = buttonCards.count > game.fieldCards.filter({!$0.isSet}).count
+    dealButton.setTitle("Еще 3...\(game.countDealCards)", for: .normal) 
+    isPlaceForCard = (buttonCards.count > game.fieldCards.filter({!$0.isSet}).count) &&
+      game.countDealCards != 0
   }
+  
+  private func setInfo() {
+    if let fail = game.failInfo { infoLabel.text = "\(fail)" }
+  }
+  
   
   func getCardTitle(card: Card) -> NSAttributedString {
     
@@ -146,9 +153,8 @@ class ViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    countOfCards = game.dealCards(count: 12)
+    let _ = game.dealCards(count: 12)
     updateViewFromModel()
-    //button.titleLabel?.lineBreakMode = .byCharWrapping
     
   }
 
