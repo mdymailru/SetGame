@@ -25,42 +25,51 @@ class Game {
   
   var cards = [Card]()           //max 81
   var indicesOfSelected = [Int]()    //max 3
-  var fieldCards = [Card]()      //max 24
+  var fieldCards = [Card?]()      //max 24
   var indicesOfHelp = [Int]()    //max 3
-  var indicesOfMatched = [Int]()
+  //var indicesOfMatched = [Int]()
   var failInfo: String?
   var countDealCards: Int
   
   func chooseCard(at index: Int) {
-    guard fieldCards.indices.contains(index),        //card no in game field
-          !fieldCards[index].isSet else { return }   //card in Set
+    guard let card = fieldCards[index],             //card in field
+             !card.isSet else { return }            //card in Set
+    console(index)
+    failInfo = nil
     
-    let card = fieldCards[index]
-    if card.isHelp { //hide help cards
-      indicesOfHelp.forEach { fieldCards[$0].isHelp = false }
-      indicesOfHelp = []
+    if card.isHelp { //hide selection of help cards
+      indicesOfHelp.forEach { fieldCards[$0]!.isHelp = false }
+      indicesOfHelp.removeAll()
     }
     
-    if fieldCards.filter({$0.isSet}).count > 2 {
+    if fieldCards.compactMap({$0}).filter({$0.isSet}).count > 2 {
       if !dealCards() {
-        //fieldCards.filter({$0.isSet}).forEach({ fieldCards.remove(at: fieldCards.firstIndex(of: $0)!)  })
+        indicesOfSelected.forEach { fieldCards[$0]?.isSelected = false ; fieldCards[$0] = nil }
+        indicesOfSelected.removeAll()
       }
     }
     
     if card.isSelected {
       indicesOfSelected.remove(at: indicesOfSelected.firstIndex(of: index)!)
-      fieldCards[index].isSelected = false
+      fieldCards[index]!.isSelected = false
     } else {
-      fieldCards[index].isSelected = true
+      fieldCards[index]!.isSelected = true
       indicesOfSelected.append(index)
       
       if indicesOfSelected.count == 3 {
-        if isSet(indicesOfSelected) { //Set built
-          indicesOfSelected.forEach { indicesOfMatched.append($0); fieldCards[$0].isSet = true }
+        if isSet(indicesOfSelected) {
+          indicesOfSelected.forEach { fieldCards[$0]?.isSet = true }
         }
-        indicesOfSelected.forEach { fieldCards[$0].isSelected = false }
-        indicesOfSelected.removeAll()
       }
+      
+      if indicesOfSelected.count == 4 {
+        
+        indicesOfSelected.forEach { fieldCards[$0]?.isSelected = false }
+        fieldCards[index]!.isSelected = true
+        indicesOfSelected.removeFirst(3)
+        
+      }
+      
     }
     
   }
@@ -72,11 +81,15 @@ class Game {
     for _ in 1...count {
       let newCardFromDeal = cards.remove(at: cards.indices.randomElement()!)
       
-      if let emptyCardPlace = fieldCards.filter({$0.isSet}).first {
+      
+      if let emptyCardPlace = fieldCards.filter({$0?.isSet ?? false}).first {
         fieldCards[fieldCards.firstIndex(of: emptyCardPlace)!] = newCardFromDeal
         
       } else {
-         fieldCards.append(newCardFromDeal)
+         //fieldCards.append(newCardFromDeal)
+        if let index = fieldCards.indices.filter({fieldCards[$0] == nil}).randomElement() {
+          fieldCards[index] = newCardFromDeal
+        } 
       }
     }
     countDealCards = cards.count
@@ -92,7 +105,7 @@ class Game {
       
       var tagFail = ""
       for index in indexForSearchCards {
-        let result = set.insert(fieldCards[index].tag[tag]!)
+        let result = set.insert(fieldCards[index]!.tag[tag]!)
         if !result.inserted { tagFail = result.memberAfterInsert }
       }
         guard set.count != 2 else { failInfo = "\(tag): 2 \(tagFail)"; return false }
@@ -106,13 +119,16 @@ class Game {
   
   func findSet() -> [Int]? {
     
-    let indexInGameCards = fieldCards.indices.filter { !fieldCards[$0].isSet }
+    let indexInGameCards = fieldCards.indices.filter { !(fieldCards[$0]?.isSet ?? true) }
     
     let m = 3
     let n = indexInGameCards.count
     var a = [Int]()
     var indexOfSearchSetCards = [Int]()
     var exit = false
+    
+    indicesOfSelected.forEach { fieldCards[$0]?.isSelected = false }
+    indicesOfSelected.removeAll()
     
     func gen(_ num: Int, _ last: Int) {
         if num == m {
@@ -121,8 +137,8 @@ class Game {
             }
           if isSet(indexOfSearchSetCards) {
             indexOfSearchSetCards.forEach {
-              fieldCards[$0].isHelp = true
-              print("\($0) \(fieldCards[$0])")
+              fieldCards[$0]!.isHelp = true
+              print("\($0) \(fieldCards[$0]!)")
             }
             indicesOfHelp = indexOfSearchSetCards
             exit = true
@@ -145,15 +161,15 @@ class Game {
     return exit ? indexOfSearchSetCards : nil
   }
   
-  func console(_ index: Int) {
-    print("\(index) \(fieldCards[index].tag[.color]!) "
-                 + "\(fieldCards[index].tag[.shape]!) "
-                 + "\(fieldCards[index].tag[.count]!) "
-                 + "\(fieldCards[index].tag[.fill]!)")
+  private func console(_ index: Int) {
+    print("\(index) \(fieldCards[index]!.tag[.color]!) "
+                 + "\(fieldCards[index]!.tag[.shape]!) "
+                 + "\(fieldCards[index]!.tag[.count]!) "
+                 + "\(fieldCards[index]!.tag[.fill]!)")
   }
   
   
-  init() {
+  init(fieldSize: Int) {
     for fillTag in FillTag.allCases {
       for countTag in CountTag.allCases {
         for colorTag in ColorTag.allCases {
@@ -169,6 +185,10 @@ class Game {
       }
     }
     self.countDealCards = cards.count
+    
+    //for _ in 0..<fieldSize { fieldCards.append(nil) }
+    self.fieldCards = Array<Card?>(repeating: nil, count: fieldSize)
+    
   }
   
 }

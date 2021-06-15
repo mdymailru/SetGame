@@ -9,20 +9,19 @@ import UIKit
 
 class ViewController: UIViewController {
 
-  let game = Game()
+  let game = Game(fieldSize: 24)
   var isPlaceForCard = true {
     didSet { dealButton.isEnabled = isPlaceForCard }
   }
-  
   var indexOfSetHelp : [Int]? {
     didSet { if let indices = indexOfSetHelp {
-                helpButton.setTitle("\(indices[0...2])" , for: .normal)
-           } else {
-            helpButton.setTitle("No Set" , for: .normal)
-           }
+                    helpButton.setTitle("\(indices[0...2])" , for: .normal)
+           } else { helpButton.setTitle("No Set" , for: .normal) }
     }
   }
-  
+  var infoTitle = "" {
+    didSet { infoLabel.text = infoTitle }
+  }
   
   @IBOutlet var buttonCards: [UIButton]!
   @IBOutlet weak var infoLabel: UILabel!
@@ -30,39 +29,33 @@ class ViewController: UIViewController {
   @IBOutlet weak var helpButton: UIButton!
   @IBOutlet weak var dealButton: UIButton!
   
+  @IBAction func swipeAction(_ sender: UISwipeGestureRecognizer) {
+    touchDealButton(dealButton)
+  }
+  
   @IBAction func touchButtonCard(_ sender: UIButton) {
-    guard let index = buttonCards.firstIndex(of: sender),
-          game.fieldCards.indices.contains(index) else { return }
-    game.console(index)
+    guard let index = buttonCards.firstIndex(of: sender) else { return }
     game.chooseCard(at: index)
     updateViewFromModel()
   }
   
   @IBAction func touchDealButton(_ sender: UIButton) {
-    
-    if isPlaceForCard, game.dealCards() {
+    if game.dealCards() {
       updateViewFromModel()
+      helpButton.setTitle("Help", for: .normal)
     }
-    
-    //isPlaceForCard = buttonCards.count > game.fieldCards.filter({!$0.isSet}).count
   }
   
   @IBAction func touchHelp(_ sender: UIButton) {
     indexOfSetHelp = game.findSet()
     updateViewFromModel()
-    
   }
   
-  
   func updateViewFromModel() {
-    
-    setInfo()
-    
     for index in buttonCards.indices {
       let button = buttonCards[index]
       
-      if game.fieldCards.indices.contains(index) { //card button is use card
-        let card = game.fieldCards[index]
+      if let card = game.fieldCards[index] {
         
         button.backgroundColor = App.inFieldCardBackColor
         button.layer.cornerRadius = 8
@@ -78,9 +71,9 @@ class ViewController: UIViewController {
             button.layer.borderWidth = 0.0
           }
         }
-      
         if card.isSet { //card button in Set
           button.backgroundColor = App.inSetCardBackColor
+          helpButton.setTitle("Help", for: .normal)
         }
         
         button.setAttributedTitle(getCardTitle(card: card), for: .normal)
@@ -88,22 +81,18 @@ class ViewController: UIViewController {
       } else {                                         //no use card button
         button.setTitle(nil, for: .normal)
         button.setAttributedTitle(nil, for: .normal)
+        button.layer.borderWidth = 0.0
         button.backgroundColor = App.noUseCardBackColor
       }
-     
+      infoTitle = game.failInfo ?? ""
     }
     
-    dealButton.setTitle("Еще 3...\(game.countDealCards)", for: .normal) 
-    isPlaceForCard = (buttonCards.count > game.fieldCards.filter({!$0.isSet}).count) &&
-      game.countDealCards != 0
+    dealButton.setTitle("Еще 3 из: \(game.countDealCards)", for: .normal)
+    isPlaceForCard = (buttonCards.count > game.fieldCards.compactMap({$0}).filter({!$0.isSet}).count) &&
+                      game.countDealCards != 0
   }
   
-  private func setInfo() {
-    if let fail = game.failInfo { infoLabel.text = "\(fail)" }
-  }
-  
-  
-  func getCardTitle(card: Card) -> NSAttributedString {
+  private func getCardTitle(card: Card) -> NSAttributedString {
     
     let empty = NSAttributedString(string: "?", attributes: nil)
     
@@ -150,7 +139,7 @@ class ViewController: UIViewController {
     
   }
   
-  override func viewDidLoad() {
+   override func viewDidLoad() {
     super.viewDidLoad()
     
     let _ = game.dealCards(count: 12)
